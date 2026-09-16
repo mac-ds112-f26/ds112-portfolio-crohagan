@@ -1,0 +1,340 @@
+/*-- scss:defaults --*/
+
+// ---- Fonts ----
+// Fraunces for headings (warm, a little editorial/personal)
+// Work Sans for body copy (clean, easy to read)
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap');
+
+$font-family-sans-serif: "Work Sans", -apple-system, BlinkMacSystemFont, sans-serif !default;
+$font-family-serif: "Fraunces", Georgia, serif !default;
+$headings-font-family: $font-family-serif !default;
+$headings-font-weight: 600 !default;
+
+// ---- Palette ----
+$cream:        #FAF9F5;  // main background — soft warm near-white
+$cream-dark:   #F3F1E9;  // sidebar / card background
+$cream-darker: #E7E3D5;  // borders, dividers
+$ink:          #2E2F28;  // body text (warm charcoal, not pure black)
+$ink-soft:     #6B6D5F;  // secondary text
+
+$sage:         #93AC8B;  // core accent
+$sage-dark:    #64795D;  // headings, links, active states
+$sage-darker:  #4C5D47;  // hover / pressed
+$sage-light:   #EAF0E3;  // tints — code bg, hover bg
+$sage-pale:    #F1F5EC;  // very subtle fills
+
+$gold:         #C79A55;  // sparing highlight accent
+$terracotta:   #C87F5F;  // second sparing accent, used once or twice for interest
+
+// ---- Bootstrap variable overrides ----
+$body-bg:            $cream !default;
+$body-color:          $ink !default;
+$link-color:          $sage-dark !default;
+$link-hover-color:    $sage-darker !default;
+
+$primary:             $sage-dark !default;
+$secondary:           $ink-soft !default;
+
+$border-color:        $cream-darker !default;
+
+$code-bg:             $sage-light !default;
+$code-color:          $sage-darker !default;
+
+$pre-bg:              $cream-dark !default;
+$pre-color:           $ink !default;
+
+$table-border-color:  $cream-darker !default;
+
+/*-- scss:rules --*/
+
+body {
+  font-feature-settings: "liga" 1, "kern" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.2s ease;
+}
+
+// ---- Headings — a little modern interest, not just colored text ----
+h1, h2, h3, h4, h5 {
+  color: $ink;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-weight: 700;
+  position: relative;
+  padding-bottom: 0.3em;
+}
+
+h2 {
+  font-weight: 600;
+  margin-top: 2.2em;
+  padding-top: 0.5em;
+  border-top: 1px solid $cream-darker;
+}
+
+h3 {
+  font-weight: 600;
+  color: $sage-darker;
+}
+
+// Small accent mark before h2 for a bit of visual rhythm
+h2::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, $sage, $gold);
+  margin-right: 0.5em;
+  vertical-align: middle;
+  transform: translateY(-2px);
+}
+
+// ---- Links — animated underline instead of a static one ----
+a {
+  color: $sage-darker;
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size 0.25s ease, color 0.15s ease;
+  padding-bottom: 1px;
+}
+a:hover {
+  color: $terracotta;
+  background-size: 100% 1px;
+}
+// Don't animate-underline nav / card links, just content links
+.sidebar-navigation a,
+.navbar a,
+nav[role="doc-toc"] a,
+.quarto-title-banner a,
+a.nav-link {
+  background-image: none;
+}
+
+::selection {
+  background: $sage-light;
+  color: $sage-darker;
+}
+
+// ---- Overall page chrome ----
+.quarto-title-banner {
+  background: linear-gradient(180deg, $cream-dark 0%, $cream 100%);
+  border-bottom: none;
+  position: relative;
+}
+.quarto-title-banner::after {
+  content: "";
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, $sage, $gold, $terracotta);
+}
+
+#quarto-header {
+  background-color: $cream;
+  box-shadow: 0 1px 0 $cream-darker;
+}
+
+// ---- Sidebar (left navigation) — flat + floating, not boxed in ----
+#quarto-sidebar,
+.sidebar.sidebar-navigation {
+  background-color: $cream;
+  border-right: none;
+  box-shadow: 1px 0 0 $cream-darker;
+}
+
+.sidebar-title {
+  font-family: $headings-font-family;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: $ink;
+  padding-bottom: 0.75em;
+  border-bottom: 2px solid $sage;
+  margin-bottom: 0.75em;
+}
+
+.sidebar-navigation .sidebar-item-text {
+  color: $ink-soft;
+  font-size: 0.92rem;
+}
+
+.sidebar-navigation .sidebar-item a:hover,
+.sidebar-navigation .sidebar-item-text:hover {
+  color: $sage-darker;
+}
+
+// Active page = soft rounded pill instead of a plain color change
+.sidebar-navigation .active,
+.sidebar-navigation .sidebar-item a.active {
+  color: $sage-darker !important;
+  font-weight: 600;
+}
+.sidebar-navigation li > .sidebar-item-container:has(> .active),
+.sidebar-navigation .sidebar-item-container:hover {
+  background-color: $sage-pale;
+  border-radius: 999px;
+  padding-left: 0.6em;
+  margin-left: -0.6em;
+}
+
+// Section / part headers in the sidebar — small caps, spaced out
+.sidebar-navigation .sidebar-section > .sidebar-item .sidebar-item-text {
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $sage-dark;
+  margin-top: 1em;
+}
+
+// Search box — pill shaped, modern
+.sidebar-search .form-control,
+#quarto-search input {
+  background-color: $cream-dark;
+  border: 1px solid $cream-darker;
+  border-radius: 999px;
+  padding-left: 1em;
+}
+.sidebar-search .form-control:focus,
+#quarto-search input:focus {
+  border-color: $sage;
+  box-shadow: 0 0 0 3px rgba($sage, 0.15);
+}
+
+// ---- Top navbar (if shown) ----
+.navbar {
+  background-color: $cream !important;
+  border-bottom: 1px solid $cream-darker;
+}
+.navbar-title,
+.navbar-brand {
+  color: $ink !important;
+  font-family: $headings-font-family;
+  font-weight: 700;
+}
+
+// ---- Table of contents (right side) ----
+#TOC,
+nav[role="doc-toc"] {
+  border-left: none;
+  box-shadow: -1px 0 0 $cream-darker;
+}
+#toc-title {
+  color: $sage-dark;
+  font-family: $headings-font-family;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.toc-actions a,
+nav[role="doc-toc"] ul > li > a {
+  color: $ink-soft;
+  border-left: 2px solid transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+nav[role="doc-toc"] ul > li > a.active {
+  color: $sage-darker;
+  font-weight: 600;
+  border-left: 2px solid $sage;
+}
+
+// ---- Code ----
+pre.sourceCode {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba($ink, 0.08), 0 0 0 1px $cream-darker;
+}
+div.sourceCode {
+  background-color: $pre-bg;
+  border-radius: 10px;
+}
+code {
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+}
+// Code copy button — sage circle
+.code-copy-button {
+  border-radius: 50%;
+}
+.code-copy-button:hover {
+  background-color: $sage-light;
+}
+
+// ---- Blockquotes ----
+blockquote {
+  border-left: 4px solid $terracotta;
+  color: $ink-soft;
+  background-color: rgba($terracotta, 0.06);
+  padding: 0.7em 1.1em;
+  border-radius: 0 10px 10px 0;
+  font-style: italic;
+}
+
+// ---- Callouts — card style with a little lift ----
+div.callout {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 8px rgba($ink, 0.07);
+}
+div.callout.callout-style-default > .callout-header {
+  background-color: $sage-light;
+  font-weight: 600;
+}
+
+// ---- Tables ----
+.table {
+  --bs-table-bg: transparent;
+}
+.table thead th {
+  color: $sage-dark;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 2px solid $sage;
+}
+.table tbody tr:hover {
+  background-color: $sage-pale;
+}
+
+// ---- Horizontal rule ----
+hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, $cream-darker, transparent);
+}
+
+// ---- Buttons / code-tools / TOC actions — pill shape, sage on hover ----
+.btn, .quarto-title-tools-icon, .code-tools-button {
+  border-radius: 999px;
+}
+.btn:hover {
+  background-color: $sage-light;
+  color: $sage-darker;
+}
+
+// ---- Footer ----
+.page-footer {
+  background-color: $cream-dark;
+  border-top: 1px solid $cream-darker;
+}
+
+// Scrollbar (webkit) for a cohesive feel
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: $cream;
+}
+::-webkit-scrollbar-thumb {
+  background: $sage;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: $sage-dark;
+}
