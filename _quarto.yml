@@ -30,9 +30,6 @@ book:
   # site-url: https://site-url
   page-navigation: true
   back-to-top-navigation: true
-  cookie-consent:
-    type: implied
-    style: simple
   # bread-crumbs: true  # causes problems with older Quarto version
   # downloads: [pdf]
   # repo-url: https://repo-url
@@ -46,8 +43,6 @@ book:
 
   sidebar:
     title: "Catriona O'Hagan"
-    logo: assets/sidebar-logo.png
-    logo-alt: "Random negative space illustration"
     collapse-level: 2
     style: "docked"
     pinned: true
@@ -77,6 +72,7 @@ book:
       chapters:
       - ica/ica-sample1.qmd
       - ica/ica-sample2.qmd
+      - ica/quarto-demo.qmd
 
     - part: "Extras"
       chapters:
@@ -87,9 +83,9 @@ book:
 
 format:
   html:
-    theme: # bootswatch themes--other options https://bootswatch.com/
-      light: flatly
-      dark: darkly
+    theme:
+      light: [style/theme-light.scss]
+      dark: [style/theme-dark.scss]
     search: true
     toc: true
     toc-depth: 3
@@ -102,16 +98,17 @@ format:
     code-link: true
     code-line-numbers: true
     code-block-bg: true
-    code-block-border-left: "#1482FA"
+    code-block-border-left: "#93AC8B"
     code-tools: true
     page-layout: full
     code-fold: true
     number-sections: false
     toc-expand: true
-    # grid:
-    #   sidebar-width: 200px
-    #   body-width: 950px
-    #   margin-width: 150px
+    grid:
+      sidebar-width: 260px
+      body-width: 900px
+      margin-width: 220px
+      gutter-width: 1.5em
 
   # pdf:
   #   documentclass: scrreprt
