@@ -1,0 +1,301 @@
+/*-- scss:defaults --*/
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap');
+
+$font-family-sans-serif: "Work Sans", -apple-system, BlinkMacSystemFont, sans-serif !default;
+$font-family-serif: "Fraunces", Georgia, serif !default;
+$headings-font-family: $font-family-serif !default;
+$headings-font-weight: 600 !default;
+
+// ---- Palette (dark complement to the light sage/cream theme) ----
+$charcoal:       #23261F;  // main background — deep warm green-charcoal
+$charcoal-light: #2B2F26;  // sidebar / card background
+$charcoal-border:#3A3E32;
+
+$cream:          #ECE6D4;  // body text
+$cream-soft:     #B9B39F;  // secondary text
+
+$sage:           #A9C29E;  // links, active states
+$sage-bright:    #C3DAB8;  // hover
+$sage-deep:      #6E8566;  // subtle fills
+$sage-pale:      #333A2C;  // subtle fills, pill backgrounds
+
+$gold:           #D9B26B;
+$terracotta:     #D99574;
+
+$body-bg:            $charcoal !default;
+$body-color:          $cream !default;
+$link-color:          $sage !default;
+$link-hover-color:    $sage-bright !default;
+
+$primary:             $sage !default;
+$secondary:           $cream-soft !default;
+
+$border-color:        $charcoal-border !default;
+
+$code-bg:             $charcoal-light !default;
+$code-color:          $sage-bright !default;
+
+$pre-bg:              $charcoal-light !default;
+$pre-color:           $cream !default;
+
+$table-border-color:  $charcoal-border !default;
+
+
+body {
+  font-feature-settings: "liga" 1, "kern" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.2s ease;
+}
+
+h1, h2, h3, h4, h5 {
+  color: $cream;
+  letter-spacing: -0.02em;
+}
+h1 { font-weight: 700; }
+h2 {
+  font-weight: 600;
+  margin-top: 2.2em;
+  padding-top: 0.5em;
+  border-top: 1px solid $charcoal-border;
+}
+h3 {
+  font-weight: 600;
+  color: $sage-bright;
+}
+h2::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, $sage, $gold);
+  margin-right: 0.5em;
+  vertical-align: middle;
+  transform: translateY(-2px);
+}
+
+a {
+  color: $sage-bright;
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size 0.25s ease, color 0.15s ease;
+  padding-bottom: 1px;
+}
+a:hover {
+  color: $terracotta;
+  background-size: 100% 1px;
+}
+.sidebar-navigation a,
+.navbar a,
+nav[role="doc-toc"] a,
+.quarto-title-banner a,
+a.nav-link {
+  background-image: none;
+}
+
+::selection {
+  background: $sage-deep;
+  color: $charcoal;
+}
+
+.quarto-title-banner {
+  background: linear-gradient(180deg, $charcoal-light 0%, $charcoal 100%);
+  border-bottom: none;
+  position: relative;
+}
+.quarto-title-banner::after {
+  content: "";
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, $sage, $gold, $terracotta);
+}
+
+#quarto-header {
+  background-color: $charcoal;
+  box-shadow: 0 1px 0 $charcoal-border;
+}
+
+#quarto-sidebar,
+.sidebar.sidebar-navigation {
+  background-color: $charcoal;
+  border-right: none;
+  box-shadow: 1px 0 0 $charcoal-border;
+}
+
+.sidebar-title {
+  font-family: $headings-font-family;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: $cream;
+  padding-bottom: 0.75em;
+  border-bottom: 2px solid $sage-deep;
+  margin-bottom: 0.75em;
+}
+
+.sidebar-navigation .sidebar-item-text {
+  color: $cream-soft;
+  font-size: 0.92rem;
+}
+.sidebar-navigation .sidebar-item a:hover,
+.sidebar-navigation .sidebar-item-text:hover {
+  color: $sage-bright;
+}
+.sidebar-navigation .active,
+.sidebar-navigation .sidebar-item a.active {
+  color: $sage-bright !important;
+  font-weight: 600;
+}
+.sidebar-navigation li > .sidebar-item-container:has(> .active),
+.sidebar-navigation .sidebar-item-container:hover {
+  background-color: $sage-pale;
+  border-radius: 999px;
+  padding-left: 0.6em;
+  margin-left: -0.6em;
+}
+.sidebar-navigation .sidebar-section > .sidebar-item .sidebar-item-text {
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $sage;
+  margin-top: 1em;
+}
+
+.sidebar-search .form-control,
+#quarto-search input {
+  background-color: $charcoal-light;
+  border: 1px solid $charcoal-border;
+  border-radius: 999px;
+  padding-left: 1em;
+  color: $cream;
+}
+.sidebar-search .form-control:focus,
+#quarto-search input:focus {
+  border-color: $sage;
+  box-shadow: 0 0 0 3px rgba($sage, 0.2);
+}
+
+.navbar {
+  background-color: $charcoal !important;
+  border-bottom: 1px solid $charcoal-border;
+}
+.navbar-title,
+.navbar-brand {
+  color: $cream !important;
+  font-family: $headings-font-family;
+  font-weight: 700;
+}
+
+#TOC,
+nav[role="doc-toc"] {
+  border-left: none;
+  box-shadow: -1px 0 0 $charcoal-border;
+}
+#toc-title {
+  color: $sage;
+  font-family: $headings-font-family;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.toc-actions a,
+nav[role="doc-toc"] ul > li > a {
+  color: $cream-soft;
+  border-left: 2px solid transparent;
+}
+nav[role="doc-toc"] ul > li > a.active {
+  color: $sage-bright;
+  font-weight: 600;
+  border-left: 2px solid $sage;
+}
+
+pre.sourceCode {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(#000, 0.3), 0 0 0 1px $charcoal-border;
+}
+div.sourceCode {
+  background-color: $pre-bg;
+  border-radius: 10px;
+}
+code {
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+}
+.code-copy-button {
+  border-radius: 50%;
+}
+.code-copy-button:hover {
+  background-color: $sage-pale;
+}
+
+blockquote {
+  border-left: 4px solid $terracotta;
+  color: $cream-soft;
+  background-color: rgba($terracotta, 0.1);
+  padding: 0.7em 1.1em;
+  border-radius: 0 10px 10px 0;
+  font-style: italic;
+}
+
+div.callout {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(#000, 0.25);
+}
+div.callout.callout-style-default > .callout-header {
+  background-color: $charcoal-light;
+  font-weight: 600;
+}
+
+.table thead th {
+  color: $sage;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 2px solid $sage-deep;
+}
+.table tbody tr:hover {
+  background-color: $sage-pale;
+}
+
+hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, $charcoal-border, transparent);
+}
+
+.btn, .quarto-title-tools-icon, .code-tools-button {
+  border-radius: 999px;
+}
+.btn:hover {
+  background-color: $sage-pale;
+  color: $sage-bright;
+}
+
+.page-footer {
+  background-color: $charcoal-light;
+  border-top: 1px solid $charcoal-border;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: $charcoal;
+}
+::-webkit-scrollbar-thumb {
+  background: $sage-deep;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: $sage;
+}
