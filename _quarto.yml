@@ -76,6 +76,8 @@ book:
       - ica/univariate-viz.qmd
       - ica/bivariate-viz-exercises.qmd
       - ica/multivariate-viz.qmd
+      - ica/spatial-viz.qmd
+      - ica/effective-viz.qmd
 
     - part: "Extras"
       chapters:
