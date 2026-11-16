@@ -2,4 +2,338 @@
 title: "Personal Visualization Journey"
 ---
 
-Add content here
+```{r}
+library(stringr)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(tidyverse)
+```
+
+```{r}
+
+sleep <- read.csv("~/Downloads/Developer/GitHub/ds112-portfolio-crohagan/pvj/sleep.csv")
+```
+
+
+```{r} 
+sleep %>%
+  mutate(
+    startDate = with_tz(ymd_hms(startDate), "America/Chicago"),
+    endDate   = with_tz(ymd_hms(endDate), "America/Chicago"),
+    dur_hrs   = as.numeric(difftime(endDate, startDate, units = "hours"))
+  )
+
+nightly <- sleep %>%
+  dplyr::filter(grepl("Watch", source)) %>%
+  dplyr::filter(value %in% c("AsleepCore", "AsleepDeep", "AsleepREM", "AsleepUnspecified")) %>%
+  dplyr::mutate(
+    start   = with_tz(ymd_hms(startDate), "America/Chicago"),
+    end     = with_tz(ymd_hms(endDate), "America/Chicago"),
+    dur_hrs = as.numeric(difftime(end, start, units = "hours")),
+    night   = as_date(end)
+  ) %>%
+  dplyr::filter(night >= as.Date("2026-01-01")) %>%
+  dplyr::group_by(night) %>%
+  dplyr::summarise(
+    hours_asleep = sum(dur_hrs),
+    deep = sum(dur_hrs[value == "AsleepDeep"]),
+    rem  = sum(dur_hrs[value == "AsleepREM"]),
+    core = sum(dur_hrs[value == "AsleepCore"])
+  ) %>%
+  dplyr::filter(hours_asleep >= 2)
+
+nrow(nightly)
+summary(nightly$hours_asleep)
+```
+
+```{r}
+nightly$hours_asleep <- round(nightly$hours_asleep, 3)
+
+nightly$deep <- round(nightly$deep, 3)
+
+nightly$rem <- round(nightly$rem, 3)
+
+nightly$core <- round(nightly$core, 3)
+
+```
+
+
+
+```{r}
+head(nightly)
+```
+```{r}
+# 1. Data prep: drop incomplete months
+nightly_clean <- nightly %>%
+  mutate(night = as.Date(night),
+         month = month(night, label = TRUE, abbr = FALSE),
+         day   = day(night)) %>%
+  filter(!month %in% c("May", "October"))
+
+# 2. Summary stats (used for panel labels, subtitle, alt text) 
+month_stats <- nightly_clean %>%
+  group_by(month) %>%
+  summarise(avg = mean(hours_asleep), n = n(), .groups = "drop") %>%
+  mutate(month_lab = sprintf("%s  |  avg %.1f h  (%d nights)",
+                             as.character(month), avg, n))
+
+avg_total <- mean(nightly_clean$hours_asleep)
+avg_deep  <- mean(nightly_clean$deep)
+pct_7h    <- mean(nightly_clean$hours_asleep >= 7) * 100
+
+# 3. Long format 
+nightly_long <- nightly_clean %>%
+  left_join(select(month_stats, month, month_lab), by = "month") %>%
+  pivot_longer(c(deep, rem, core), names_to = "stage", values_to = "hours") %>%
+  mutate(stage     = factor(stage, levels = c("core", "rem", "deep"),
+                            labels = c("Core", "REM", "Deep")),
+         month_lab = fct_reorder(month_lab, as.integer(month)))
+
+# 4. Text 
+subtitle_txt <- str_wrap(
+  sprintf("Nightly sleep averaged %.1f h, including %.1f h of deep sleep. %.0f%% of nights reached the 7 h reference line (dashed). Gaps are nights with no recorded data.",
+          avg_total, avg_deep, pct_7h),
+  width = 110)
+
+alt_txt <- sprintf(
+  "Small-multiple stacked bar charts, one panel per month from June to September 2026. Each bar is one night of sleep, split into deep, REM and core sleep, with deep sleep at the bottom. A dashed line marks 7 hours. Average sleep was %.1f hours per night, including %.1f hours of deep sleep. Some nights are missing.",
+  avg_total, avg_deep)
+
+# 5. Plot 
+p <- ggplot(nightly_long, aes(day, hours, fill = stage)) +
+  geom_col(width = 0.92) +                                   # wider bars, no borders eating area
+  geom_hline(yintercept = 7, linetype = "dashed", color = "grey20", linewidth = 0.5) +
+  facet_wrap(~ month_lab, ncol = 1, axes = "all_x") +        # one month per row = much wider panels
+  scale_x_continuous(breaks = 1:31,                          # label every day since there's room now
+                     limits = c(0.4, 31.6), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0, 12), breaks = seq(0, 12, 4),
+                     expand = expansion(mult = c(0, 0))) +
+  scale_fill_manual(values = c(Deep = "#1b2a6b", REM = "#E69F00", Core = "#9ccbe8"),
+                    breaks = c("Deep", "REM", "Core")) +
+  labs(title    = "Sleep stages by night, June to September 2026",
+       subtitle = subtitle_txt,
+       x        = "Day of month",
+       y        = "Hours asleep",
+       fill     = "Sleep stage",
+       caption  = paste0("Data: Apple Health sleep tracking  |  ",
+                         "Author: Catriona O'Hagan  |  Created: ", format(Sys.Date(), "%B %d, %Y")),
+       alt      = alt_txt) +
+  theme_minimal(base_size = 15) +                            # larger text overall
+  theme(plot.background       = element_rect(fill = "white", color = NA),
+        plot.title.position   = "plot",
+        plot.title            = element_text(face = "bold", size = 22),
+        plot.subtitle         = element_text(color = "grey25", size = 13, lineheight = 1.1),
+        plot.caption          = element_text(color = "grey30", size = 10, hjust = 0),
+        strip.text            = element_text(face = "bold", hjust = 0, size = 15),
+        axis.text             = element_text(size = 11, color = "grey20"),
+        axis.title            = element_text(size = 13),
+        legend.position       = "top",
+        legend.justification  = "left",
+        legend.title          = element_text(face = "bold", size = 13),
+        legend.text           = element_text(size = 12),
+        legend.key.size       = unit(1, "lines"),
+        panel.grid.major.x    = element_blank(),
+        panel.grid.minor      = element_blank(),
+        panel.spacing.y       = unit(1, "lines"),
+        plot.margin           = margin(10, 15, 10, 10))
+
+
+```
+
+
+```{r}
+#| fig-width: 12
+#| fig-height: 10
+p
+ggsave("sleep_by_month.png", p, width = 11, height = 8, dpi = 200, bg = "white")
+```
+
+```{r}
+ggplot(nightly, aes(x = ))
+```
+
+
+
+
+## Revised version (after feedback)
+
+```{r}
+# 1. Helpers + full calendar (so missing nights are visible, and June stops at 30)
+fmt_hm <- function(h) {
+  m <- round(h * 60)
+  sprintf("%d h %02d min", m %/% 60, m %% 60)
+}
+
+calendar <- tibble(night = seq(as.Date("2026-06-01"), as.Date("2026-09-30"), by = "day")) %>%
+  mutate(month    = month(night, label = TRUE, abbr = FALSE),
+         day      = day(night),
+         day_type = if_else(wday(night, week_start = 1) >= 6, "Weekend", "Weekday"),
+         day_type = factor(day_type, levels = c("Weekday", "Weekend")))
+
+nightly_wk <- nightly_clean %>%
+  mutate(day_type = if_else(wday(night, week_start = 1) >= 6, "Weekend", "Weekday"),
+         day_type = factor(day_type, levels = c("Weekday", "Weekend")))
+
+# 2. Summary stats, now including weekday vs. weekend averages
+month_stats2 <- nightly_wk %>%
+  group_by(month) %>%
+  summarise(avg   = mean(hours_asleep),
+            n     = n(),
+            wkday = mean(hours_asleep[day_type == "Weekday"]),
+            wkend = mean(hours_asleep[day_type == "Weekend"]),
+            .groups = "drop") %>%
+  mutate(month_lab = sprintf("%s  |  avg %.1f h  (%d nights)\nWeekday avg %.1f h  |  Weekend avg %.1f h",
+                             as.character(month), avg, n, wkday, wkend))
+
+avg_wkday <- mean(nightly_wk$hours_asleep[nightly_wk$day_type == "Weekday"])
+avg_wkend <- mean(nightly_wk$hours_asleep[nightly_wk$day_type == "Weekend"])
+
+# 3. Attach panel labels to the calendar and to the nightly data
+calendar <- calendar %>%
+  left_join(select(month_stats2, month, month_lab), by = "month") %>%
+  mutate(month_lab = fct_reorder(month_lab, as.integer(month)))
+
+nightly_long2 <- nightly_wk %>%
+  select(night, deep, rem, core) %>%
+  pivot_longer(c(deep, rem, core), names_to = "stage", values_to = "hours") %>%
+  mutate(stage = factor(stage, levels = c("core", "rem", "deep"),
+                        labels = c("Core", "REM", "Deep"))) %>%
+  left_join(calendar, by = "night")
+
+weekend_days <- filter(calendar, day_type == "Weekend")
+missing_days <- anti_join(calendar, nightly_clean, by = "night")
+
+# label for the 7 h line, shown once (June panel only)
+ref_label <- calendar %>%
+  filter(month == "June", day == 30) %>%
+  mutate(y = 7)
+
+# 4. Text
+subtitle_txt2 <- str_wrap(
+  sprintf("Nightly sleep averaged %.1f h, including %s of deep sleep (%.1f h on weekdays vs. %.1f h on weekends). %.0f%% of nights reached the 7 h line (dashed). Shaded columns are weekends. Grey dashes mark nights with no usable data (watch not worn or charging, or under 2 h recorded).",
+          avg_total, fmt_hm(avg_deep), avg_wkday, avg_wkend, pct_7h),
+  width = 110)
+
+alt_txt2 <- sprintf(
+  "Small-multiple stacked bar charts, one panel per month from June to September 2026. Each bar is one night of sleep split into deep, REM and core sleep. Weekends are shaded. A dashed line marks 7 hours. Average sleep was %.1f hours on weekdays and %.1f hours on weekends. Nights with no data are marked with a short grey dash.",
+  avg_wkday, avg_wkend)
+
+# 5. Plot
+p2 <- ggplot(nightly_long2, aes(day, hours)) +
+  # weekend shading behind everything
+  geom_rect(data = weekend_days,
+            aes(xmin = day - 0.5, xmax = day + 0.5, ymin = 0, ymax = 12),
+            inherit.aes = FALSE, fill = "grey90") +
+  geom_col(aes(fill = stage), width = 0.8) +
+  # baseline dash for nights with no data, so gaps don't look blank
+  geom_segment(data = missing_days,
+               aes(x = day - 0.4, xend = day + 0.4, y = 0, yend = 0),
+               inherit.aes = FALSE, color = "grey55", linewidth = 1.2) +
+  geom_hline(yintercept = 7, linetype = "dashed", color = "grey20", linewidth = 0.5) +
+  geom_text(data = ref_label, aes(x = day, y = y, label = "7 h"),
+            inherit.aes = FALSE, vjust = -0.6, hjust = 1, size = 3.8, color = "grey20") +
+  facet_wrap(~ month_lab, ncol = 1, scales = "free_x") +
+  scale_x_continuous(breaks = 1:31, expand = expansion(add = 0.6)) +
+  scale_y_continuous(limits = c(0, 12), breaks = c(0, 4, 8, 12),
+                     labels = function(x) paste0(x, " h"),
+                     expand = expansion(mult = c(0, 0))) +
+  scale_fill_manual(values = c(Deep = "#1b2a6b", REM = "#E69F00", Core = "#9ccbe8"),
+                    breaks = c("Deep", "REM", "Core")) +
+  labs(title    = "Sleep stages by night, June to September 2026",
+       subtitle = subtitle_txt2,
+       x        = "Day of month (shaded = weekend)",
+       y        = "Hours asleep",
+       fill     = "Sleep stage",
+       caption  = paste0("Data: Apple Health sleep tracking  |  ",
+                         "Author: Catriona O'Hagan  |  Created: ", format(Sys.Date(), "%B %d, %Y")),
+       alt      = alt_txt2) +
+  theme_minimal(base_size = 15) +
+  theme(plot.background       = element_rect(fill = "white", color = NA),
+        plot.title.position   = "plot",
+        plot.title            = element_text(face = "bold", size = 22),
+        plot.subtitle         = element_text(color = "grey25", size = 13, lineheight = 1.1),
+        plot.caption          = element_text(color = "grey30", size = 10, hjust = 0),
+        strip.text            = element_text(face = "bold", hjust = 0, size = 14, lineheight = 1.1),
+        axis.text             = element_text(size = 11, color = "grey20"),
+        axis.title            = element_text(size = 15, face = "bold"),
+        legend.position       = "top",
+        legend.justification  = "left",
+        legend.title          = element_text(face = "bold", size = 13),
+        legend.text           = element_text(size = 12),
+        panel.grid.major.x    = element_blank(),
+        panel.grid.minor      = element_blank(),
+        panel.spacing.y       = unit(1, "lines"),
+        plot.margin           = margin(10, 15, 10, 10))
+```
+
+```{r}
+#| fig-width: 12
+#| fig-height: 11
+p2
+ggsave("sleep_by_month_revised.png", p2, width = 11, height = 9, dpi = 200, bg = "white")
+```
+
+
+## Simple version: REM sleep, weekdays vs. weekends (boxplots)
+
+```{r}
+# 1. Prep: all months, flag weekday vs. weekend, REM in minutes
+rem_wk <- nightly %>%
+  mutate(night    = as.Date(night),
+         month    = month(night, label = TRUE, abbr = FALSE),
+         day_type = if_else(wday(night, week_start = 1) >= 6, "Weekend", "Weekday"),
+         day_type = factor(day_type, levels = c("Weekday", "Weekend")),
+         rem_min  = rem * 60) %>%
+  filter(night <= as.Date("2026-10-31"))   # drops the 1-2 nights in November
+
+# 2. Overall medians for the subtitle
+overall <- rem_wk %>%
+  group_by(day_type) %>%
+  summarise(med_min = median(rem_min), .groups = "drop")
+
+wkday_min <- overall$med_min[overall$day_type == "Weekday"]
+wkend_min <- overall$med_min[overall$day_type == "Weekend"]
+
+subtitle_rem <- sprintf("Median REM sleep was %.0f min on weekdays and %.0f min on weekends. Each dot is one night.",
+                        wkday_min, wkend_min)
+
+# 3. Plot
+p3 <- ggplot(rem_wk, aes(x = month, y = rem_min, fill = day_type)) +
+  geom_boxplot(width = 0.7, outlier.shape = NA, alpha = 0.85,
+               position = position_dodge(width = 0.8)) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.8),
+             size = 2, alpha = 0.5, color = "grey20") +
+  scale_fill_manual(values = c(Weekday = "#CBBEFF", Weekend = "#BEFFCB")) +
+  scale_y_continuous(labels = function(x) paste0(x, " min"),
+                     limits = c(0, NA),
+                     expand = expansion(mult = c(0, 0.05))) +
+  labs(title    = "REM sleep on weekdays vs. weekends",
+       subtitle = subtitle_rem,
+       x        = NULL,
+       y        = "REM sleep per night",
+       fill     = NULL,
+       caption  = paste0("Data: Apple Health sleep tracking  |  ",
+                         "Author: Catriona O'Hagan  |  Created: ", format(Sys.Date(), "%B %d, %Y")),
+       alt      = "Boxplots of nightly REM sleep in minutes by month, comparing weekdays in grey with weekends in orange. Individual nights are shown as dots.") +
+  theme_minimal(base_size = 15) +
+  theme(plot.background      = element_rect(fill = "white", color = NA),
+        plot.title.position  = "plot",
+        plot.title           = element_text(face = "bold", size = 20),
+        plot.subtitle        = element_text(color = "grey25", size = 13),
+        plot.caption         = element_text(color = "grey30", size = 10, hjust = 0),
+        axis.title.y         = element_text(face = "bold", size = 13),
+        axis.text            = element_text(size = 11, color = "grey20"),
+        legend.position      = "top",
+        legend.justification = "left",
+        legend.text          = element_text(size = 12),
+        panel.grid.major.x   = element_blank(),
+        panel.grid.minor     = element_blank())
+```
+
+```{r}
+#| fig-width: 10
+#| fig-height: 5
+p3
+ggsave("rem_weekday_weekend_box.png", p3, width = 10, height = 5, dpi = 200, bg = "white")
+```
