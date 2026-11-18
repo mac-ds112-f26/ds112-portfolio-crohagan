@@ -12,6 +12,8 @@ Consider data on a sleep study in which subjects received only 3 hours of sleep 
 [^10-reshaping-data-1]: Gregory Belenky, Nancy J. Wesensten, David R. Thorne, Maria L. Thomas, Helen C. Sing, Daniel P. Redmond, Michael B. Russo and Thomas J. Balkin (2003) Patterns of performance degradation and restoration during sleep restriction and subsequent recovery: a sleep dose-response study. Journal of Sleep Research 12, 1–12.
 
 ```{r}
+library(tidyverse)
+
 sleep_wide <- read.csv("https://mac-stat.github.io/data/sleep_wide.csv")
 
 head(sleep_wide)
@@ -169,7 +171,7 @@ In using this data, you'll need to determine if and when the data needs to be re
 Construct and summarize a plot of how a song's Billboard ranking its 2nd week on the chart (y-axis) is related to its ranking the 1st week on the charts (x-axis). Add a reference line `geom_abline(intercept = 0, slope = 1)`. Since a ranking of 1 is the top of the chart, songs *above* this line *dropped* in the rankings from the 1st to 2nd week, and songs *below* it *improved*.
 
 ```{r}
-ggplot(billboard, aes(x = wk2, y = wk1)) +
+ggplot(billboard, aes(x = wk1, y = wk2)) +
   geom_point() +
   geom_abline(intercept = 0, slope = 1)
   
@@ -194,10 +196,12 @@ Define a new dataset, `nov_1999`, which:
 
 ```{r}
 # Define nov_1999
-
+nov_1999 <- billboard |>
+  filter(date.entered == "1999-11-06") |>
+  select(-track, -date.entered)
 
 # Confirm that nov_1999 has 2 rows (songs) and 77 columns
-
+dim(nov_1999)  # should be 2 rows, 77 columns
 
 ```
 
@@ -206,7 +210,15 @@ Define a new dataset, `nov_1999`, which:
 Create and discuss a visualization of the rankings (y-axis) over time (x-axis) for the 2 songs in `nov_1999`. There are hints below (if you scroll), but you're encouraged to play around and use as few hints as possible.
 
 ```{r}
-
+nov_1999 |>
+  pivot_longer(cols = -artist,
+               names_to = "week",
+               names_prefix = "wk",
+               names_transform = as.numeric,
+               values_to = "ranking",
+               values_drop_na = TRUE) |>
+  ggplot(aes(x = week, y = ranking, color = artist)) +
+  geom_line()
 ```
 
 Hints:
@@ -233,7 +245,9 @@ In analyzing this data, you'll need to determine if and when the data needs to b
 Identify the 15 guests that appeared the most. (This isn't a very diverse guest list!)
 
 ```{r}
-
+daily |>
+  count(raw_guest_list, sort = TRUE) |>
+  head(15)
 ```
 
 ### ✏️ Build Appearances Table
@@ -247,7 +261,15 @@ CHALLENGE: Create the following data set containing 19 columns:
 There are hints below (if you scroll), but you're encouraged to play around and use as few hints as possible.
 
 ```{r}
-
+daily |>
+  count(raw_guest_list, year) |>
+  group_by(raw_guest_list) |>
+  mutate(total = sum(n)) |>
+  ungroup() |>
+  pivot_wider(names_from = year, values_from = n, values_fill = 0) |>
+  arrange(desc(total)) |>
+  head(15) |>
+  relocate(total, .after = last_col())
 ```
 
 HINTS: There are lots of ways to do this. You don't necessarily need all of these hints.
@@ -282,5 +304,10 @@ plot_data <- daily |>
 Now, using the `broad_group` variable in `plot_data`, recreate the graphic from the article, with three different lines showing the fraction of guests in each group over time. Note: You'll have to wrangle the data first.
 
 ```{r}
-
+plot_data |>
+  count(year, broad_group) |>
+  group_by(year) |>
+  mutate(fraction = n / sum(n)) |>
+  ggplot(aes(x = year, y = fraction, color = broad_group)) +
+  geom_line()
 ```

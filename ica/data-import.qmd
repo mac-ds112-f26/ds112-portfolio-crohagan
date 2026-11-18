@@ -137,7 +137,8 @@ If you didn't already in ✏️ Summarize Variables, check out the `color` varia
 -   More specifically, what different categories does the `color` variable take, and how many movies fall into each of these categories?
 
 ```{r}
-
+imdb_messy |>
+  count(color)
 ```
 
 
@@ -231,7 +232,8 @@ Next, let's think about what to *do* about the missing values. There is no perfe
 Calculate the average duration of a film. THINK: How can we deal with the NA's?
 
 ```{r}
-
+imdb_messy |>
+  summarize(mean(duration, na.rm = TRUE))
 ```
 
 Follow-up:
@@ -257,26 +259,27 @@ Follow-up questions:
 `drop_na()` removes data points that have *any* NA values, even if we don't care about the variable(s) for which data is missing. This can result in losing a lot of data points that *do* have data on the variables we actually care about! For example, suppose we only want to explore the relationship between film `duration` and whether it's in `color`. Check out a plot:
 
 ```{r}
-# ggplot(imdb_messy, aes(x = duration, fill = color)) +
-#   geom_density()
+imdb_complete <- imdb_messy |>
+  drop_na(duration, color)
+
+ggplot(imdb_complete, aes(x = duration, fill = color)) +
+  geom_density()
+
+nrow(imdb_complete)
+nrow(drop_na(imdb_messy))   # compare with the full drop_na()
 ```
 
-Follow-up:
-
--   Create a new dataset with *only* and *all* movies that have complete info on `duration` and `color`. HINT: You could use `!is.na(___)` or `drop_na()` (differently than above)
--   Use this new dataset to create a new and improved plot.
--   How many movies remain in your new dataset? Hence why this is better than using the dataset from ✏️ Try `drop_na()`?
-
-```{r}
-
-```
 
 ### ✏️ Replace NAs
 
 In some cases, missing data is more *non*-data than *unknown* data. For example, the films with NAs for `actor_1_facebook_likes` actually have *0* Facebook likes--they don't even have actors! In these cases, we can *replace* the NAs with a 0. Use the `replace_na()` function to create a new dataset (`imdb_temp`) that replaces the NAs in `actor_1_facebook_likes` with 0. You'll have to check out the help file for this function.
 
 ```{r}
+imdb_temp <- imdb_messy |>
+  mutate(actor_1_facebook_likes = replace_na(actor_1_facebook_likes, 0))
 
+# Check: this should now be 0
+sum(is.na(imdb_temp$actor_1_facebook_likes))
 ```
 
 

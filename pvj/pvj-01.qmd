@@ -63,6 +63,8 @@ nightly$core <- round(nightly$core, 3)
 ```{r}
 head(nightly)
 ```
+
+
 ```{r}
 # 1. Data prep: drop incomplete months
 nightly_clean <- nightly %>%
